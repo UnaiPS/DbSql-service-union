@@ -18,14 +18,15 @@ public class DataAccessImpl implements IDataAccess{
 	private PreparedStatement preparedStatement;
 	private Connections connectionToUse = new Connections();
 	
-	private void setConnectionToUse() {
-		this.connectionToUse.setAlias("db_connections_service");
-		this.connectionToUse.setHost("localhost");
-		this.connectionToUse.setUser("root");
-		this.connectionToUse.setPass("abcd*1234");
+	@Override
+	public void setConnectionToUse(Connections connection) {
+		this.connectionToUse.setAlias(connection.getAlias());
+		this.connectionToUse.setHost(connection.getHost());
+		this.connectionToUse.setUser(connection.getUser());
+		this.connectionToUse.setPass(connection.getPass());
 	}
+	
 	private void connect() throws ClassNotFoundException, SQLException {
-		this.setConnectionToUse();
 		Class.forName("com.mysql.cj.jdbc.Driver");
 		String url = "jdbc:mysql://" + connectionToUse.getHost() + "/"
 				+ connectionToUse.getAlias() + "?serverTimezone=Europe/Madrid";
