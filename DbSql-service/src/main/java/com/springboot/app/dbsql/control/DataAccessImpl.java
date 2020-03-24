@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.springboot.app.commons.models.entity.Connections;
 
@@ -19,11 +20,11 @@ public class DataAccessImpl implements IDataAccess{
 	private Connections connectionToUse = new Connections();
 	
 	@Override
-	public void setConnectionToUse(Connections connection) {
-		this.connectionToUse.setAlias(connection.getAlias());
-		this.connectionToUse.setHost(connection.getHost());
-		this.connectionToUse.setUser(connection.getUser());
-		this.connectionToUse.setPass(connection.getPass());
+	public void setConnectionToUse(String host, String alias, String user, String pass, Integer port) {
+		this.connectionToUse.setAlias(alias);
+		this.connectionToUse.setHost(host);
+		this.connectionToUse.setUser(user);
+		this.connectionToUse.setPass(pass);
 	}
 	
 	private void connect() throws ClassNotFoundException, SQLException {

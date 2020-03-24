@@ -6,7 +6,7 @@ import java.util.List;
 import com.springboot.app.commons.models.entity.Connections;
 
 public interface IDataAccess {
-	public void setConnectionToUse(Connections connection);
+	public void setConnectionToUse(String host, String alias, String user, String pass, Integer port);
 	
 	public List<String> getTablesNames() throws ClassNotFoundException, SQLException ;
 }
