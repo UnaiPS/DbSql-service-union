@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -18,6 +20,7 @@ public class DataAccessImpl implements IDataAccess{
 	private Connection conn;
 	private PreparedStatement preparedStatement;
 	private Connections connectionToUse = new Connections();
+	private static Logger log = LoggerFactory.getLogger(DataAccessImpl.class);
 	
 	@Override
 	public void setConnectionToUse(String host, String alias, String user, String pass, Integer port) {
@@ -56,7 +59,9 @@ public class DataAccessImpl implements IDataAccess{
 			while(rs.next()) {
 				tables.add(rs.getString("table_name"));
 			}
-		} finally {
+		}catch(Exception e) {
+			log.error("Error: Cannot connect to the database");
+		}finally {
 			disconnect();
 		}
 		return tables;
