@@ -1,6 +1,7 @@
 package com.springboot.app.dbsql.control;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -14,18 +15,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+
 @Controller
-@RequestMapping("/customResponse")
+@RequestMapping("/dbsql")
 public class CustomResponseController {
 	
 	private static Logger log = LoggerFactory.getLogger(CustomResponseController.class);
 	
 	@Autowired
 	private IDataAccess dataAccess;
-	
+	@HystrixCommand(fallbackMethod = "findAllTablesFail")
 	@CrossOrigin
-	@GetMapping("/test/{host}/{alias}/{user}/{pass}/{port}")
-	public ResponseEntity<?> findAllTables(@PathVariable String host, @PathVariable String alias, @PathVariable String user, @PathVariable String pass, @PathVariable Integer port) throws ClassNotFoundException, SQLException{
+	@GetMapping("/findAllTables/{host}/{alias}/{user}/{pass}/{port}")
+	public ResponseEntity<?> findAllTables(@PathVariable String host, @PathVariable String alias, @PathVariable String user, @PathVariable String pass, @PathVariable Integer port) throws Exception{
 		HttpStatus statusToSend;
 		if(isDataNull(host, alias, user, pass, port)) {
 			return ResponseEntity
@@ -36,11 +39,16 @@ public class CustomResponseController {
 			if(connectionSuccessful()) {
 				statusToSend = HttpStatus.OK;
 			}else {
-				statusToSend = HttpStatus.BAD_REQUEST;
+				throw new Exception("No se pudo establecer la conexión");
 			}
 			return new ResponseEntity<List<String>>(dataAccess.getTablesNames(), statusToSend);
 		}
 		
+	}
+	
+	public ResponseEntity<?> findAllTablesFail(String host, String alias, String user, String pass, Integer port){
+		List<String> nullResponse = new ArrayList<>();
+		return new ResponseEntity<List<String>>(nullResponse, HttpStatus.BAD_REQUEST);
 	}
 	
 	private Boolean connectionSuccessful(){
