@@ -17,6 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
+/**
+ * 
+ * @author Unai Pérez Sánchez
+ * This class is to create custom methods to call them by using HTTP requests
+ *
+ */
 @Controller
 @RequestMapping("/dbsql")
 public class CustomResponseController {
@@ -25,6 +31,18 @@ public class CustomResponseController {
 	
 	@Autowired
 	private IDataAccess dataAccess;
+	
+	/**
+	 * This method gets the connection to use and with that information and tries
+	 * to get the tables names of the database 
+	 * @param host The host of the connection to the database
+	 * @param alias The name of the schema of the database
+	 * @param user The username of the database
+	 * @param pass The password of the database
+	 * @param port The port where is located the database
+	 * @return Returns the list of the names of the tables
+	 * @throws Exception
+	 */
 	@HystrixCommand(fallbackMethod = "findAllTablesFail")
 	@CrossOrigin
 	@GetMapping("/findAllTables/{host}/{alias}/{user}/{pass}/{port}")
@@ -46,11 +64,24 @@ public class CustomResponseController {
 		
 	}
 	
+	/**
+	 * This method only is called if findAllTables method fails in some way
+	 * @param host The host name of the connection
+	 * @param alias The name of the schema of the connection to the database
+	 * @param user The username of the connection to the database
+	 * @param pass The password of the user to connect to the database
+	 * @param port The port where is located the database
+	 * @return Returns a bad request via HTTP
+	 */
 	public ResponseEntity<?> findAllTablesFail(String host, String alias, String user, String pass, Integer port){
 		List<String> nullResponse = new ArrayList<>();
 		return new ResponseEntity<List<String>>(nullResponse, HttpStatus.BAD_REQUEST);
 	}
 	
+	/**
+	 * This method checks if the connection was sucessful or not
+	 * @return Returns a boolean, true if the connection was sucessful or false if it wasn't
+	 */
 	private Boolean connectionSuccessful(){
 		Boolean response = true;
 		try {
@@ -63,6 +94,15 @@ public class CustomResponseController {
 		return response;
 	}
 	
+	/**
+	 * This method checks if some value of the given connection is null
+	 * @param host The host name of the connection
+	 * @param alias The name of the schema of the connection to the database
+	 * @param user The username of the connection to the database
+	 * @param pass The password of the user to connect to the database
+	 * @param port The port where is located the database
+	 * @return Returns a boolean, true if there was any data null, or false if there wasn't
+	 */
 	private Boolean isDataNull(String host, String alias, String user, String pass, Integer port) {
 		Boolean response = false;
 		if(host == null || port == 0 || port == null || alias == null || user == null || pass == null) {
