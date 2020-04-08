@@ -13,6 +13,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
@@ -62,6 +64,65 @@ public class CustomResponseController {
 			return new ResponseEntity<List<String>>(dataAccess.getTablesNames(), statusToSend);
 		}
 		
+	}
+	
+	@CrossOrigin
+	@PostMapping("/insertElements")
+	public void insertNewElements(@RequestBody Response response) {
+		try {
+			if(checkResponseIsEmpty(response)) {
+				throw new Exception("Some values of the response are empty");
+			}
+			if(isDataNull(response.getHost(), response.getAlias(), response.getUser(), response.getPass(), response.getPort())) {
+				throw new Exception("One or more values of the connection are null");
+			}
+			ArrayList<Table> tempTables = response.getTables();
+			for (Table table : tempTables) {
+				String sql = "INSERT INTO ";
+				sql = sql + table.getName() + " (";
+				ArrayList<Field> tempFields = table.getFields();
+				for (int i = 0; i < tempFields.size(); i++) {
+					if(i == tempFields.size()-1) {
+						sql = sql + tempFields.get(i).getName() + ") ";
+					}else {
+						sql = sql + tempFields.get(i).getName() +",";
+					}
+				}
+				
+				sql = sql + "VALUES (";
+				
+				for (int i = 0; i < tempFields.size(); i++) {
+					if(i == tempFields.size()-1) {
+						sql = sql + "'" + tempFields.get(i).getValue() + "');";
+					}else {
+						sql = sql + "'" + tempFields.get(i).getValue() +"',";
+					}
+				}
+				log.info(sql);
+				dataAccess.setConnectionToUse(response.getHost(), response.getAlias(), response.getUser(), response.getPass(), response.getPort());
+				dataAccess.insertNewValues(sql);
+			}
+		}catch (Exception e) {
+			log.error("An error happened: "+e.getMessage());
+		}
+	}
+	
+	private Boolean checkResponseIsEmpty(Response response) {
+		Boolean isEmpty = false;
+		
+		ArrayList<Table> tables = response.getTables();
+		
+		if(response.getTables().isEmpty()) {
+			isEmpty = true;
+		}else {
+			for (Table table : tables) {
+				if(table.getFields().isEmpty()) {
+					isEmpty = true;
+				}
+			}
+		}
+		
+		return isEmpty;
 	}
 	
 	/**

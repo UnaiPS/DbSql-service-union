@@ -14,4 +14,6 @@ public interface IDataAccess {
 	public void setConnectionToUse(String host, String alias, String user, String pass, Integer port);
 	
 	public List<String> getTablesNames() throws ClassNotFoundException, SQLException ;
+	
+	public void insertNewValues(String sql) throws ClassNotFoundException, SQLException;
 }

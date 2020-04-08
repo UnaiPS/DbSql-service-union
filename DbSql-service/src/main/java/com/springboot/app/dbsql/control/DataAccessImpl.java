@@ -92,4 +92,14 @@ public class DataAccessImpl implements IDataAccess{
 		return tables;
 	}
 	
+	
+	public void insertNewValues(String sql) throws ClassNotFoundException, SQLException {
+		try {
+			connect();
+			preparedStatement = conn.prepareStatement(sql);
+			preparedStatement.executeUpdate();
+		} finally {
+			disconnect();
+		}
+	}
 }
