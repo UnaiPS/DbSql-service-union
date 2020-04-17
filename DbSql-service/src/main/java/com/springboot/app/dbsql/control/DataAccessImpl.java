@@ -102,4 +102,56 @@ public class DataAccessImpl implements IDataAccess{
 			disconnect();
 		}
 	}
+	
+	@Override
+	public TableInfo getAllOneTable(String table) throws ClassNotFoundException, SQLException {
+		ResultSet rs = null;
+		List<String> tableList = new ArrayList<String>();
+		ArrayList<Column> columnList = new ArrayList<Column>();
+		TableInfo objTable = new TableInfo();
+		objTable.setName(table);
+
+		try {
+			connect();
+			String query = "SELECT table_name FROM information_schema.tables WHERE table_schema = ?";
+			preparedStatement = conn.prepareStatement(query);
+			preparedStatement.setString(1, connectionToUse.getAlias());
+			rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				tableList.add(rs.getString("table_name"));
+			}
+			if (tableExist(tableList, table) == true) {
+				String getInfo = "SELECT * FROM " + table;
+				rs = null;
+				preparedStatement = conn.prepareStatement(getInfo);
+				rs = preparedStatement.executeQuery();
+				while (rs.next()) {
+
+					for (int i = 1; i < rs.getMetaData().getColumnCount() + 1; i++) {
+						System.out.print(" " + rs.getMetaData().getColumnName(i) + "=" + rs.getObject(i));
+						Column column = new Column(rs.getMetaData().getColumnName(i),rs.getObject(i));
+						columnList.add(column);
+					}
+				}
+			
+			objTable.setColumns(columnList);
+			}
+		} finally {
+
+			disconnect();
+
+		}
+		return objTable;
+	}
+
+	public boolean tableExist(List<String> tableList, String table) {
+		Boolean exist = false;
+		for (int i = 0; i < tableList.size(); i++) {
+			if (tableList.get(i).contentEquals(table) == true) {
+				exist = true;
+			}
+		}
+		return exist;
+
+	}
 }

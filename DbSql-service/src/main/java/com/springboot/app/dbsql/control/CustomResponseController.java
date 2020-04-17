@@ -171,4 +171,13 @@ public class CustomResponseController {
 		}
 		return response;
 	}
+	
+	@CrossOrigin
+	@GetMapping("/allOfTable/{host}/{port}/{user}/{pass}/{alias}/{table}")
+	public ResponseEntity<TableInfo> findTableAllData(@PathVariable String host, @PathVariable Integer port,
+			@PathVariable String user, @PathVariable String pass, @PathVariable String alias, @PathVariable String table)
+			throws ClassNotFoundException, SQLException {
+		dataAccess.setConnectionToUse(host, alias, user, pass, port);
+		return new ResponseEntity<TableInfo>(dataAccess.getAllOneTable(table), HttpStatus.OK);
+	}
 }

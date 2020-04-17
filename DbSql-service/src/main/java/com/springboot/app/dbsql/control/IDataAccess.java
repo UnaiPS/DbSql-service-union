@@ -3,7 +3,6 @@ package com.springboot.app.dbsql.control;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.springboot.app.commons.models.entity.Connections;
 
 /**
  * 
@@ -16,4 +15,6 @@ public interface IDataAccess {
 	public List<String> getTablesNames() throws ClassNotFoundException, SQLException ;
 	
 	public void insertNewValues(String sql) throws ClassNotFoundException, SQLException;
+	
+	public TableInfo getAllOneTable(String table) throws ClassNotFoundException, SQLException;
 }
