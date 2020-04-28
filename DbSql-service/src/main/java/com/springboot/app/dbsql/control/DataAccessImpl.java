@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import com.springboot.app.commons.models.entity.Connections;
+import com.springboot.app.commons.models.entity.Metadates;
 
 /**
  * 
@@ -153,5 +155,87 @@ public class DataAccessImpl implements IDataAccess{
 		}
 		return exist;
 
+	}
+
+	@Override
+	public ArrayList<String> getTablesNames(String alias) throws ClassNotFoundException, SQLException {
+		ArrayList<String> tablesNames = new ArrayList<String>();
+		ResultSet rs = null;
+		try {
+			connect();
+			String query = "SHOW TABLES FROM " + alias;
+			log.info(query);
+			preparedStatement = conn.prepareStatement(query);
+			rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				tablesNames.add(rs.getString("Tables_in_" + alias));
+			}
+		} finally {
+			disconnect();
+		}
+		return tablesNames;
+	}
+
+	@Override
+	public ArrayList<String> getColumnNamesFromTable(String table, String alias) throws ClassNotFoundException, SQLException {
+		ResultSet rs = null;
+		ArrayList<String> columnNames = new ArrayList<String>();
+		
+		try {
+			connect();
+			String query = "SHOW COLUMNS FROM " + alias + "." + table;
+			preparedStatement = conn.prepareStatement(query);
+			rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				columnNames.add(rs.getString("field"));			
+			}
+		} finally {
+			disconnect();
+		}
+		
+		return columnNames;
+	}
+
+	@Override
+	public Long insertMetadate(Metadates metadate) throws ClassNotFoundException, SQLException {
+		Long createdId = 0L;
+		String sql = "";
+		ResultSet rs = null;
+		setConnectionToUse("localhost", "db_connections_service", "root", "abcd*1234", 3306);
+		try {
+			connect();
+			if(metadate.getLevel() == 1) {
+				sql = "INSERT INTO metadates (active,description,level,meta) VALUES(" + metadate.getActive() + ",'"+
+						metadate.getDescription() + "','" + metadate.getLevel() + "','" + metadate.getMeta() + "')";
+			}else {
+				sql = "INSERT INTO metadates (active,description,id_parent,level,meta) VALUES(" + metadate.getActive() + ",'"+
+						metadate.getDescription() + "','" + metadate.getIdParent() + "','" + metadate.getLevel() + "','" + metadate.getMeta() + "')";
+			}
+			preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+			preparedStatement.execute();
+			rs = preparedStatement.getGeneratedKeys();
+			if(rs.next()) {
+				createdId = rs.getLong(1);
+			}
+			
+		} finally {
+			disconnect();
+		}
+		return createdId;
+	}
+
+	@Override
+	public void insertConnectionMetadates(Long idConnection, Long idMetadate)
+			throws ClassNotFoundException, SQLException {
+		setConnectionToUse("localhost", "db_connections_service", "root", "abcd*1234", 3306);
+		String sql = "";
+		try {
+			connect();
+			sql = "INSERT INTO connections_metadates (id_connection,id_metadate) VALUES (" + idConnection +"," + idMetadate + ")";
+			preparedStatement = conn.prepareStatement(sql);
+			preparedStatement.executeUpdate();
+		} finally {
+			disconnect();
+		}
 	}
 }

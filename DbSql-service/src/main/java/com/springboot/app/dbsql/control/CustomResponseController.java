@@ -16,8 +16,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.springboot.app.commons.models.entity.Connections;
+import com.springboot.app.commons.models.entity.Metadates;
 
 /**
  * 
@@ -68,6 +71,7 @@ public class CustomResponseController {
 	
 	@CrossOrigin
 	@PostMapping("/insertElements")
+	@ResponseStatus(HttpStatus.CREATED)
 	public void insertNewElements(@RequestBody Response response) {
 		try {
 			if(checkResponseIsEmpty(response)) {
@@ -180,4 +184,91 @@ public class CustomResponseController {
 		dataAccess.setConnectionToUse(host, alias, user, pass, port);
 		return new ResponseEntity<TableInfo>(dataAccess.getAllOneTable(table), HttpStatus.OK);
 	}
+	
+	@CrossOrigin
+	@GetMapping("/getTableNames/{host}/{port}/{user}/{pass}/{alias}")
+	public ResponseEntity<ArrayList<String>> getTableNames(@PathVariable String host, @PathVariable Integer port,
+			@PathVariable String user, @PathVariable String pass, @PathVariable String alias) throws ClassNotFoundException, SQLException{
+		dataAccess.setConnectionToUse(host, alias, user, pass, port);
+		ArrayList<String> tableNames = new ArrayList<String>();
+		HttpStatus status;
+		try {
+			tableNames = dataAccess.getTablesNames(alias);
+			status = HttpStatus.OK;
+		}catch (Exception e) {
+			status = HttpStatus.BAD_REQUEST;
+			log.error(e.getMessage());
+		}
+		 
+		return new ResponseEntity<ArrayList<String>>(tableNames, status);
+	}
+	
+	@CrossOrigin
+	@GetMapping("/getColumnNamesFromTable/{host}/{port}/{user}/{pass}/{alias}/{tableName}")
+	public ResponseEntity<ArrayList<String>> getColumnNames(@PathVariable String host, @PathVariable Integer port,
+			@PathVariable String user, @PathVariable String pass, @PathVariable String alias, @PathVariable String tableName) throws ClassNotFoundException, SQLException{
+		dataAccess.setConnectionToUse(host, alias, user, pass, port);
+		ArrayList<String> columnNames = new ArrayList<String>();
+		HttpStatus status;
+		try {
+			columnNames = dataAccess.getColumnNamesFromTable(tableName, alias);
+			status = HttpStatus.OK;
+		}catch (Exception e) {
+			status = HttpStatus.BAD_REQUEST;
+			log.error(e.getMessage());
+		}
+		return new ResponseEntity<ArrayList<String>>(columnNames, status);
+	}
+	
+	@CrossOrigin
+	@PostMapping("/createMetadates")
+	@ResponseStatus(HttpStatus.CREATED)
+	public void createMetadates(@RequestBody PreMetadate preMeta){
+		
+		Long actualTable = 0L;
+		ArrayList<Long> createdMetas = new ArrayList<Long>();
+		ArrayList<MetaColumn> columns = new ArrayList<MetaColumn>();
+		Metadates tempMetadate = new Metadates();
+		columns = preMeta.getColumns();
+		try {
+			String table = columns.get(0).getTableName();
+			
+			tempMetadate.setActive(true);
+			tempMetadate.setDescription("Table of the connection: "+ preMeta.getConnection().getAlias());
+			tempMetadate.setLevel(1);
+			tempMetadate.setMeta(table);
+			
+			actualTable = dataAccess.insertMetadate(tempMetadate);
+			createdMetas.add(actualTable);
+			
+			for (MetaColumn metaColumn : columns) {
+				if(!metaColumn.getTableName().equals(table)) {
+					table = metaColumn.getTableName();
+					tempMetadate.setActive(true);
+					tempMetadate.setDescription("Table of the connection: "+ preMeta.getConnection().getAlias());
+					tempMetadate.setLevel(1);
+					tempMetadate.setMeta(table);
+					
+					actualTable = dataAccess.insertMetadate(tempMetadate);
+					createdMetas.add(actualTable);
+				}
+				tempMetadate.setActive(true);
+				tempMetadate.setDescription("Field of the connection: "+ preMeta.getConnection().getAlias());
+				tempMetadate.setIdParent(actualTable);
+				tempMetadate.setLevel(2);
+				tempMetadate.setMeta(metaColumn.getColumnName());
+				createdMetas.add(dataAccess.insertMetadate(tempMetadate));
+			}
+			insertConnectionMetadates(preMeta.getConnection(), createdMetas);
+		}catch (Exception e) {
+			log.error(e.getMessage());
+		}
+	}
+	
+	private void insertConnectionMetadates(Connections connection, ArrayList<Long> ids) throws ClassNotFoundException, SQLException {
+		for (Long id : ids) {
+			dataAccess.insertConnectionMetadates(connection.getId(), id);
+		}
+	}
+	
 }
