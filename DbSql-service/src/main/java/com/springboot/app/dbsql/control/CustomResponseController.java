@@ -226,17 +226,14 @@ public class CustomResponseController {
 	public void createMetadates(@RequestBody PreMetadate preMeta){
 		
 		Long actualTable = 0L;
-		ArrayList<Long> createdMetas = new ArrayList<Long>();
-		ArrayList<MetaColumn> columns = new ArrayList<MetaColumn>();
+		ArrayList<Long> createdMetas = new ArrayList<>();
+		ArrayList<MetaColumn> columns;
 		Metadates tempMetadate = new Metadates();
 		columns = preMeta.getColumns();
 		try {
 			String table = columns.get(0).getTableName();
 			
-			tempMetadate.setActive(true);
-			tempMetadate.setDescription("Table of the connection: "+ preMeta.getConnection().getAlias());
-			tempMetadate.setLevel(1);
-			tempMetadate.setMeta(table);
+			tempMetadate = newMetadate(true, "Table of the connection: "+ preMeta.getConnection().getAlias(), 0L, 1, table);
 			
 			actualTable = dataAccess.insertMetadate(tempMetadate);
 			createdMetas.add(actualTable);
@@ -244,19 +241,15 @@ public class CustomResponseController {
 			for (MetaColumn metaColumn : columns) {
 				if(!metaColumn.getTableName().equals(table)) {
 					table = metaColumn.getTableName();
-					tempMetadate.setActive(true);
-					tempMetadate.setDescription("Table of the connection: "+ preMeta.getConnection().getAlias());
-					tempMetadate.setLevel(1);
-					tempMetadate.setMeta(table);
+					
+					tempMetadate = newMetadate(true, "Table of the connection: "+ preMeta.getConnection().getAlias(), 0L, 1, table);
 					
 					actualTable = dataAccess.insertMetadate(tempMetadate);
 					createdMetas.add(actualTable);
 				}
-				tempMetadate.setActive(true);
-				tempMetadate.setDescription("Field of the connection: "+ preMeta.getConnection().getAlias());
-				tempMetadate.setIdParent(actualTable);
-				tempMetadate.setLevel(2);
-				tempMetadate.setMeta(metaColumn.getColumnName());
+				
+				tempMetadate = newMetadate(true, "Field of the connection: "+ preMeta.getConnection().getAlias(), actualTable, 2, metaColumn.getColumnName());
+				
 				createdMetas.add(dataAccess.insertMetadate(tempMetadate));
 			}
 			insertConnectionMetadates(preMeta.getConnection(), createdMetas);
@@ -271,4 +264,20 @@ public class CustomResponseController {
 		}
 	}
 	
+	private Metadates newMetadate(Boolean active, String description, Long idParent, Integer level, String meta) {
+		Metadates metas = new Metadates();
+		if(level == 1) {
+			metas.setActive(active);
+			metas.setDescription(description);
+			metas.setLevel(level);
+			metas.setMeta(meta);
+		}else {
+			metas.setActive(active);
+			metas.setDescription(description);
+			metas.setIdParent(idParent);
+			metas.setLevel(level);
+			metas.setMeta(meta);
+		}
+		return metas;
+	}
 }
