@@ -238,4 +238,18 @@ public class DataAccessImpl implements IDataAccess{
 			disconnect();
 		}
 	}
+
+	@Override
+	public void deleteFromConnectionMetadates(Long idMeta) throws ClassNotFoundException, SQLException {
+		String sql = "";
+		try {
+			connect();
+			sql = "DELETE FROM connections_metadates WHERE id_metadate = "+idMeta;
+			preparedStatement = conn.prepareStatement(sql);
+			preparedStatement.executeUpdate();
+		} finally {
+			disconnect();
+		}
+		
+	}
 }

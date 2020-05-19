@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -279,5 +280,17 @@ public class CustomResponseController {
 			metas.setMeta(meta);
 		}
 		return metas;
+	}
+	
+	@CrossOrigin
+	@DeleteMapping("/deleteFromConnectionsMetadates/{idmeta}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteFromConnectionsMetadates(@PathVariable Long idmeta) {
+		dataAccess.setConnectionToUse("localhost", "db_connections_service", "root", "abcd*1234", 3306);
+		try {
+			dataAccess.deleteFromConnectionMetadates(idmeta);
+		} catch (Exception e) {
+			log.error(e.getMessage());
+		}
 	}
 }

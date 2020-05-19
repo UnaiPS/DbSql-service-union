@@ -28,4 +28,6 @@ public interface IDataAccess {
 	public Long insertMetadate(Metadates metadate) throws ClassNotFoundException, SQLException;
 	
 	public void insertConnectionMetadates(Long idConnection, Long idMetadate) throws ClassNotFoundException, SQLException;
+	
+	public void deleteFromConnectionMetadates(Long idMeta) throws ClassNotFoundException, SQLException;
 }
